@@ -1,0 +1,33 @@
+{
+    "name": "meu-projeto/zf1-app",
+    "description": "Aplicação ZF1-future com PHP 8.1, MySQL e Doctrine ORM",
+    "type": "project",
+    "require": {
+        "php": "^8.1",
+        "shardj/zf1-future": "^1.23",
+        "doctrine/orm": "^2.17",
+        "doctrine/dbal": "^3.7",
+        "doctrine/migrations": "^3.7",
+        "symfony/cache": "^6.4"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Application\\": "application/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "platform": {
+            "php": "8.1.34"
+        }
+    },
+    "minimum-stability": "stable"
+}

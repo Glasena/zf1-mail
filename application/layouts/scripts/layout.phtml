@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= $this->escape($this->headTitle()->toString() ?: 'ZF1 App') ?></title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f4f4f4; color: #333; }
+        header { background: #2c3e50; color: white; padding: 1rem 2rem; }
+        header a { color: white; text-decoration: none; font-size: 1.2rem; font-weight: bold; }
+        nav { background: #34495e; padding: 0.5rem 2rem; }
+        nav a { color: #ecf0f1; text-decoration: none; margin-right: 1rem; }
+        nav a:hover { text-decoration: underline; }
+        main { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+        footer { text-align: center; padding: 1rem; color: #888; font-size: 0.85rem; margin-top: 2rem; }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="<?= $this->baseUrl('/') ?>">ZF1-future App</a>
+    </header>
+    <nav>
+        <a href="<?= $this->baseUrl('/') ?>">Home</a>
+    </nav>
+    <main>
+        <?= $this->layout()->content ?>
+    </main>
+    <footer>
+        ZF1-future &middot; PHP 8.1 &middot; MySQL
+    </footer>
+</body>
+</html>

@@ -1,0 +1,10 @@
+<?php $this->headTitle('Erro') ?>
+
+<h1>Erro</h1>
+<p><?= $this->escape($this->message) ?></p>
+
+<?php if ($this->exception && APPLICATION_ENV === 'development'): ?>
+<h2>Detalhes da Exceção</h2>
+<pre><?= $this->escape($this->exception->getMessage()) ?></pre>
+<pre><?= $this->escape($this->exception->getTraceAsString()) ?></pre>
+<?php endif ?>

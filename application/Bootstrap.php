@@ -8,6 +8,30 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
 class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 {
+    protected function _initRoutes(): void
+    {
+        $this->bootstrap('frontController');
+
+        $routes = require APPLICATION_PATH . '/configs/routes.php';
+
+        Zend_Registry::set('routes', $routes);
+
+        $router = $this->getResource('frontController')->getRouter();
+
+        foreach ($routes as $name => $config) {
+            $router->addRoute($name, new Zend_Controller_Router_Route(
+                $config['route'],
+                ['module' => $config['module'], 'controller' => $config['controller'], 'action' => $config['action']]
+            ));
+        }
+    }
+
+    protected function _initAclPlugin(): void
+    {
+        $this->bootstrap('frontController');
+        $this->getResource('frontController')->registerPlugin(new Application_Plugin_Acl());
+    }
+
     protected function _initViewSetup(): Zend_View
     {
         $this->bootstrap('view');

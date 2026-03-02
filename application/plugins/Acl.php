@@ -16,7 +16,7 @@ class Application_Plugin_Acl extends Zend_Controller_Plugin_Abstract
             return;
         }
 
-        if ($routeConfig['auth'] === true) {
+        if (($routeConfig['auth'] ?? false) === true) {
             // Verificar autenticação aqui quando implementar login
             // Ex: if (!Zend_Auth::getInstance()->hasIdentity()) { ... }
         }

@@ -8,6 +8,15 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
 class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 {
+    protected function _initDispatcher(): void
+    {
+        $this->bootstrap('frontController');
+        $fc = $this->getResource('frontController');
+        $dispatcher = new \Application\Controller\Dispatcher();
+        $dispatcher->setControllerDirectory($fc->getDispatcher()->getControllerDirectory());
+        $fc->setDispatcher($dispatcher);
+    }
+
     protected function _initRoutes(): void
     {
         $this->bootstrap('frontController');
@@ -47,14 +56,14 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
     protected function _initDoctrine(): EntityManager
     {
         $options = $this->getOption('doctrine');
-        $isDev   = APPLICATION_ENV === 'development';
+        $isDev = APPLICATION_ENV === 'development';
 
         $metadataCache = $isDev
             ? new ArrayAdapter()
             : new FilesystemAdapter('doctrine_meta', 0, APPLICATION_PATH . '/../data/doctrine/cache');
 
         $config = ORMSetup::createAttributeMetadataConfiguration(
-            paths: glob(APPLICATION_PATH . '/modules/*/entities', GLOB_ONLYDIR) ?: [],
+            paths: glob(APPLICATION_PATH . '/Modules/*/Entities', GLOB_ONLYDIR) ?: [],
             isDevMode: $isDev,
             proxyDir: $options['proxies_dir'],
             cache: $metadataCache,
@@ -64,13 +73,13 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
         $config->setAutoGenerateProxyClasses((bool) $options['auto_generate_proxies']);
 
         $connection = DriverManager::getConnection([
-            'driver'   => $options['conn']['driver'],
-            'host'     => getenv('DB_HOST'),
-            'port'     => (int) getenv('DB_PORT'),
-            'user'     => getenv('DB_USER'),
+            'driver' => $options['conn']['driver'],
+            'host' => getenv('DB_HOST'),
+            'port' => (int) getenv('DB_PORT'),
+            'user' => getenv('DB_USER'),
             'password' => getenv('DB_PASS'),
-            'dbname'   => getenv('DB_NAME'),
-            'charset'  => getenv('DB_CHARSET'),
+            'dbname' => getenv('DB_NAME'),
+            'charset' => getenv('DB_CHARSET'),
         ], $config);
 
         $em = new EntityManager($connection, $config);

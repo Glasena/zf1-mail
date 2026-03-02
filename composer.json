@@ -15,10 +15,10 @@
     },
     "autoload": {
         "psr-4": {
+            "Application\\Modules\\Default\\": "application/Modules/default/",
             "Application\\": "application/"
         },
         "classmap": [
-            "application/modules/",
             "application/plugins/"
         ]
     },

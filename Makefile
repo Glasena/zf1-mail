@@ -1,7 +1,7 @@
 DOCTRINE = docker compose run --rm php php config/doctrine/doctrine-orm.php
 MIGRATIONS = docker compose run --rm php vendor/bin/doctrine-migrations --configuration=config/doctrine/cli-config.php
 
-.PHONY: up down build restart logs shell install ps db \
+.PHONY: up down build restart logs shell install ps db autoload \
         doctrine-validate doctrine-schema-create doctrine-schema-update doctrine-schema-drop \
         migration-diff migration-migrate migration-status migration-rollback \
         test test-unit test-integration
@@ -22,6 +22,9 @@ restart:
 
 install:
 	docker compose run --rm php composer install
+
+autoload:
+	docker compose run --rm php composer dump-autoload -o
 
 logs:
 	docker compose logs -f
@@ -66,13 +69,13 @@ doctrine-schema-drop:
 # ── Migrations ────────────────────────────────────────────────────────────────
 
 migration-diff:
-	$(MIGRATIONS) diff
+	$(DOCTRINE) migrations:diff
 
 migration-migrate:
-	$(MIGRATIONS) migrate --no-interaction
+	$(DOCTRINE) migrations:migrate --no-interaction
 
 migration-status:
-	$(MIGRATIONS) status
+	$(DOCTRINE) migrations:status
 
 migration-rollback:
-	$(MIGRATIONS) rollback latest
+	$(DOCTRINE) migrations:rollback latest

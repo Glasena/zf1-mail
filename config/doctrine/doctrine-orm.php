@@ -1,7 +1,12 @@
 <?php
 
+use Doctrine\Migrations\Configuration\EntityManager\ExistingEntityManager;
+use Doctrine\Migrations\Configuration\Migration\PhpFile;
+use Doctrine\Migrations\DependencyFactory;
+use Doctrine\Migrations\Tools\Console\ConsoleRunner as MigrationsConsoleRunner;
 use Doctrine\ORM\Tools\Console\ConsoleRunner;
 use Doctrine\ORM\Tools\Console\EntityManagerProvider\SingleManagerProvider;
+use Symfony\Component\Console\Application;
 
 require_once __DIR__ . '/../load-env.php';
 
@@ -20,4 +25,12 @@ $application->bootstrap('doctrine');
 /** @var \Doctrine\ORM\EntityManager $em */
 $em = Zend_Registry::get('doctrine.em');
 
-ConsoleRunner::run(new SingleManagerProvider($em));
+$dependencyFactory = DependencyFactory::fromEntityManager(
+    new PhpFile(__DIR__ . '/migrations.php'),
+    new ExistingEntityManager($em)
+);
+
+$cli = new Application('Doctrine');
+ConsoleRunner::addCommands($cli, new SingleManagerProvider($em));
+MigrationsConsoleRunner::addCommands($cli, $dependencyFactory);
+$cli->run();

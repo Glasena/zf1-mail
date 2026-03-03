@@ -88,4 +88,23 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 
         return $em;
     }
+
+    protected function _initMail()
+    {
+        $mailConfig = [
+            'host' => getenv('MAIL_HOST'),
+            'port' => (int) getenv('MAIL_PORT'),
+            'user' => getenv('MAIL_USER'),
+            'pass' => getenv('MAIL_PASS'),
+        ];
+
+        $zendMailTransport = new Zend_Mail_Transport_Smtp($mailConfig['host'], [
+            'port' => $mailConfig['port'],
+            'auth' => 'login',
+            'username' => $mailConfig['user'],
+            'password' => $mailConfig['pass']
+        ]);
+
+        Zend_Mail::setDefaultTransport($zendMailTransport);
+    }
 }

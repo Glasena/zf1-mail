@@ -19,7 +19,8 @@ RUN docker-php-ext-install \
     mbstring \
     xml \
     zip \
-    bcmath
+    bcmath \
+    sockets
 
 RUN pecl install xdebug && docker-php-ext-enable xdebug
 

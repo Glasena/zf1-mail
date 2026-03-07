@@ -31,10 +31,10 @@ class MailController extends Zend_Controller_Action
                 $formData
             );
             try {
-                $this->mailService->sendMail($sendMailDTO);
-                $this->view->message = 'Mail sent successfully!';
+                $this->mailService->queueMail($sendMailDTO);
+                $this->view->message = 'Mail queued successfully!';
             } catch (\Throwable $th) {
-                $this->view->message = 'Failed to send mail: ' . $th->getMessage();
+                $this->view->message = 'Failed to queue mail: ' . $th->getMessage();
             }
         }
     }

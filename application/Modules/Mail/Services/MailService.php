@@ -5,6 +5,7 @@ namespace Application\Modules\Mail\Services;
 use Application\Modules\Mail\DTOs\SendMailDTO;
 use Application\Modules\Mail\Entities\Mail;
 use Doctrine\ORM\EntityManager;
+use PhpAmqpLib\Connection\AMQPStreamConnection;
 use Zend_Mail;
 
 class MailService
@@ -43,5 +44,27 @@ class MailService
             $this->em->flush();
         }
 
+    }
+
+    public function queueMail(SendMailDTO $sendMailDTO): void
+    {
+        $connection = new AMQPStreamConnection('rabbitmq', 5672, 'zf1_user', 'zf1_pass');
+        $channel = $connection->channel();
+        $channel->queue_declare('mail_queue', false, true, false, false);
+
+        $data = [
+            'recipient' => $sendMailDTO->recipient,
+            'subject' => $sendMailDTO->subject,
+            'body' => $sendMailDTO->body,
+        ];
+
+        $channel->basic_publish(
+            new \PhpAmqpLib\Message\AMQPMessage(json_encode($data)),
+            '',
+            'mail_queue'
+        );
+
+        $channel->close();
+        $connection->close();
     }
 }

@@ -4,6 +4,7 @@ namespace Application\Modules\Mail\Services;
 
 use Application\Modules\Mail\DTOs\SendMailDTO;
 use Application\Modules\Mail\Entities\Mail;
+use Application\Modules\Mail\Interfaces\MailerInterface;
 use Doctrine\ORM\EntityManager;
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use Zend_Mail;
@@ -13,9 +14,12 @@ class MailService
 
     private EntityManager $em;
 
-    public function __construct(EntityManager $em)
+    private MailerInterface $mailer;
+
+    public function __construct(EntityManager $em, MailerInterface $mailer)
     {
         $this->em = $em;
+        $this->mailer = $mailer;
     }
 
     public function sendMail(SendMailDTO $sendMailDTO)
@@ -28,12 +32,7 @@ class MailService
         $mail->setStatus(Mail::STATUS_TYPES['draft']);
 
         try {
-            $zendMail = new Zend_Mail('UTF-8');
-            $zendMail->setFrom(getenv('MAIL_FROM'), 'ZF1');
-            $zendMail->addTo($sendMailDTO->recipient);
-            $zendMail->setSubject($sendMailDTO->subject);
-            $zendMail->setBodyText($sendMailDTO->body);
-            $zendMail->send();
+            $this->mailer->sendMail($sendMailDTO);
             $mail->setStatus(Mail::STATUS_TYPES['sent']);
             $this->em->persist($mail);
         } catch (\Throwable $th) {

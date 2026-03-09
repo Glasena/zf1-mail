@@ -4,6 +4,7 @@ namespace Application\Commands;
 
 use Application\Modules\Mail\DTOs\SendMailDTO;
 use Application\Modules\Mail\Services\MailService;
+use Application\Modules\Mail\Services\ZendMailService;
 use Doctrine\ORM\EntityManager;
 
 class SendMailCommand extends AbstractQueueCommand
@@ -24,7 +25,7 @@ class SendMailCommand extends AbstractQueueCommand
 
     protected function handle(array $data): void
     {
-        $mailService = new MailService($this->em);
+        $mailService = new MailService($this->em, new ZendMailService());
         $sendMailDTO = new SendMailDTO($data);
         $mailService->sendMail($sendMailDTO);
     }

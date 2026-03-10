@@ -25,7 +25,9 @@ application/
       DTOs/SendMailDTO.php
       Entities/Mail.php
       Forms/Mail.php
-      Services/MailService.php
+      Interfaces/MailerInterface.php   # contract for mail sending
+      Services/MailService.php         # orchestrates send + persistence
+      Services/ZendMailService.php     # implements MailerInterface via Zend_Mail
       Views/scripts/mail/index.phtml   # mapped from indexAction()
   configs/
     application.ini                    # Main ZF1 config
@@ -46,6 +48,7 @@ database/
 Application\Modules\{Module}\Controllers\{Name}Controller
 Application\Modules\{Module}\Entities\{Name}
 Application\Modules\{Module}\Forms\{Name}
+Application\Modules\{Module}\Interfaces\{Name}Interface
 Application\Modules\{Module}\Services\{Name}Service
 Application\Modules\{Module}\DTOs\{Name}DTO
 ```
@@ -153,6 +156,18 @@ class SendMailDTO
 - `public readonly` = externally readable + immutable (no getters needed)
 - Use `filter_var($email, FILTER_VALIDATE_EMAIL)` for email validation (no ZF1 dependency)
 
+### Interface
+```php
+namespace Application\Modules\Mail\Interfaces;
+
+interface MailerInterface
+{
+    public function sendMail(SendMailDTO $sendMailDTO): void;
+}
+```
+- Decouple the service from the concrete mail transport
+- Implementations live in `Services/` (e.g. `ZendMailService`)
+
 ### Service
 ```php
 namespace Application\Modules\Mail\Services;
@@ -160,23 +175,27 @@ namespace Application\Modules\Mail\Services;
 class MailService
 {
     private EntityManager $em;
+    private MailerInterface $mailer;
 
-    public function __construct(EntityManager $em)
+    public function __construct(EntityManager $em, MailerInterface $mailer)
     {
         $this->em = $em;
+        $this->mailer = $mailer;
     }
 
     public function sendMail(SendMailDTO $dto): void
     {
         $entity = new Mail();
         // populate entity...
-        $this->em->persist($entity);
+        $entity->setStatus(Mail::STATUS_TYPES['draft']);
 
         try {
-            // business logic
-            $entity->setStatus(...);
+            $this->mailer->sendMail($dto);
+            $entity->setStatus(Mail::STATUS_TYPES['sent']);
+            $this->em->persist($entity);
         } catch (\Throwable $th) {
-            $entity->setStatus(...);
+            $entity->setStatus(Mail::STATUS_TYPES['failed']);
+            $this->em->persist($entity);
             throw $th;
         } finally {
             $this->em->flush(); // always runs
@@ -203,6 +222,19 @@ make migration-migrate   # applies pending migrations
 make migration-status    # checks migration state
 make migration-rollback  # reverts latest migration
 ```
+
+## Tests
+
+```bash
+make test              # run all test suites
+make test-unit         # run only Unit tests
+make test-integration  # run only Integration tests
+```
+
+- Test files mirror the app structure: `tests/Unit/Modules/Mail/Services/MailServiceTest.php`
+- Namespace: `Tests\Unit\Modules\...`
+- Bootstrap: `tests/bootstrap.php` (loads autoloader only, no ZF1)
+- Use `createMock()` for dependencies; type properties as `ClassName&MockObject` for IDE support
 
 ## Useful Commands
 ```bash

@@ -1,24 +1,37 @@
-# ZF1 Future Skeleton
+# ZF1 Mail — Lab
 
-A modern PHP 8.1+ application skeleton built on top of [ZF1-Future](https://github.com/Shardj/zf1-future) — a maintained fork of Zend Framework 1 — with Doctrine ORM, Docker, and PHPUnit out of the box.
+A study lab focused on **RabbitMQ** integration and **refactoring** practice in a legacy PHP application.
 
-## Requirements
+## Goals
 
-- Docker & Docker Compose
-- Make
+- Integrate RabbitMQ as a mail sending queue in a ZF1 application
+- Practice test-driven refactoring (SRP, dependency injection, interfaces)
+- Write unit tests with mocks for decoupled code
 
 ## Stack
 
-| Layer       | Technology                   |
-|-------------|------------------------------|
-| Language    | PHP 8.1+                     |
-| Framework   | ZF1-Future ^1.23             |
-| ORM         | Doctrine ORM ^2.17           |
-| Migrations  | Doctrine Migrations ^3.7     |
-| Database    | MySQL 8.0                    |
-| Web Server  | Nginx 1.25                   |
-| Testing     | PHPUnit ^10.0                |
-| Debugging   | Xdebug (VS Code ready)       |
+| Layer       | Technology                    |
+|-------------|-------------------------------|
+| Language    | PHP 8.1+                      |
+| Framework   | ZF1-Future ^1.23              |
+| ORM         | Doctrine ORM ^2.17            |
+| Migrations  | Doctrine Migrations ^3.7      |
+| Queue       | RabbitMQ via php-amqplib      |
+| Database    | MySQL 8.0                     |
+| Web Server  | Nginx                         |
+| Testing     | PHPUnit ^10.0                 |
+
+## Mail Flow
+
+```
+[Form] → MailController → MailService::queueMail() → RabbitMQ (mail_queue)
+                                                              ↓
+                                                    SendMailCommand (worker)
+                                                              ↓
+                                               MailService::sendMail(DTO, mailer)
+                                                              ↓
+                                          ZendMailService + persist Mail entity
+```
 
 ## Getting Started
 
@@ -33,57 +46,25 @@ make up
 # 3. Install PHP dependencies
 make install
 
-# 4. Create the database schema
-make doctrine-schema-create
+# 4. Run migrations
+make migration-migrate
 ```
 
-The application will be available at [http://localhost:8080](http://localhost:8080).
+App available at [http://localhost:8080](http://localhost:8080).
 
-## Project Structure
-
-```
-.
-├── application/
-│   ├── modules/          # MVC modules
-│   │   └── default/
-│   │       ├── controllers/
-│   │       ├── models/
-│   │       └── views/
-│   ├── configs/
-│   │   └── application.ini
-│   ├── layouts/
-│   ├── Bootstrap.php
-├── config/               # Doctrine & CLI configuration
-├── database/
-│   └── migrations/
-├── docker/
-│   ├── nginx/
-│   └── php/
-├── public/
-│   └── index.php         # Application entry point
-├── tests/
-│   ├── Unit/
-│   └── Integration/
-├── docker-compose.yml
-├── Makefile
-└── .env.example
-```
-
-## Available Commands
+## Commands
 
 ### Docker
 
-| Command           | Description                         |
-|-------------------|-------------------------------------|
-| `make up`         | Start containers                    |
-| `make down`       | Stop containers                     |
-| `make build`      | Rebuild containers (no cache)       |
-| `make restart`    | Restart all services                |
-| `make install`    | Run `composer install` in container |
-| `make shell`      | Open a bash shell in PHP container  |
-| `make db`         | Open MySQL CLI                      |
-| `make logs`       | Follow container logs               |
-| `make ps`         | List running services               |
+| Command         | Description                        |
+|-----------------|------------------------------------|
+| `make up`       | Start containers                   |
+| `make down`     | Stop containers                    |
+| `make build`    | Rebuild containers                 |
+| `make shell`    | Bash into PHP container            |
+| `make db`       | MySQL CLI                          |
+| `make logs`     | Follow container logs              |
+| `make autoload` | composer dump-autoload -o          |
 
 ### Testing
 
@@ -93,50 +74,31 @@ The application will be available at [http://localhost:8080](http://localhost:80
 | `make test-unit`         | Run Unit tests only          |
 | `make test-integration`  | Run Integration tests only   |
 
-### Doctrine Schema
-
-| Command                       | Description             |
-|-------------------------------|-------------------------|
-| `make doctrine-validate`      | Validate entity mapping |
-| `make doctrine-schema-create` | Create database schema  |
-| `make doctrine-schema-update` | Update schema (force)   |
-| `make doctrine-schema-drop`   | Drop schema (force)     |
-
 ### Migrations
 
-| Command                    | Description                     |
-|----------------------------|---------------------------------|
-| `make migration-diff`      | Generate a new migration diff   |
-| `make migration-migrate`   | Run pending migrations          |
-| `make migration-status`    | Show migration status           |
-| `make migration-rollback`  | Rollback the latest migration   |
-
-## Adding a New Module
-
-1. Create the module directory under `application/modules/<module-name>/`
-2. Add `controllers/`, `models/`, `views/`, and `entities/` subdirectories
-3. Create a `Bootstrap.php` extending `Zend_Application_Module_Bootstrap`
-4. Doctrine will auto-discover entities in `*/entities` paths
+| Command                    | Description                   |
+|----------------------------|-------------------------------|
+| `make migration-diff`      | Generate migration from diff  |
+| `make migration-migrate`   | Apply pending migrations      |
+| `make migration-status`    | Show migration status         |
+| `make migration-rollback`  | Rollback latest migration     |
 
 ## Environment Variables
 
-| Variable          | Default       | Description               |
-|-------------------|---------------|---------------------------|
-| `APPLICATION_ENV` | `development` | App environment           |
-| `DB_DRIVER`       | `pdo_mysql`   | Doctrine driver           |
-| `DB_HOST`         | `mysql`       | Database host             |
-| `DB_PORT`         | `3306`        | Database port             |
-| `DB_USER`         |               | Database user             |
-| `DB_PASS`         |               | Database password         |
-| `DB_NAME`         |               | Database name             |
-| `DB_CHARSET`      | `utf8mb4`     | Connection charset        |
+| Variable          | Description                   |
+|-------------------|-------------------------------|
+| `DB_HOST`         | Database host                 |
+| `DB_USER`         | Database user                 |
+| `DB_PASS`         | Database password             |
+| `DB_NAME`         | Database name                 |
+| `RABBITMQ_HOST`   | RabbitMQ host                 |
+| `RABBITMQ_PORT`   | AMQP port (default: 5672)     |
+| `RABBITMQ_USER`   | RabbitMQ user                 |
+| `RABBITMQ_PASS`   | RabbitMQ password             |
+| `MAIL_FROM`       | Sender email address          |
 
 ## Debugging
 
-Xdebug is pre-configured for VS Code. Open the **Run & Debug** panel and start the **Listen for Xdebug** configuration. Breakpoints will be hit automatically on incoming requests.
+Xdebug is pre-configured for VS Code. Open the **Run & Debug** panel and start **Listen for Xdebug**.
 
 Port: `9003` | IDE Key: `VSCODE`
-
-## License
-
-MIT
